@@ -1,0 +1,191 @@
+---
+title: "Statistical Inference Final Project Part 2"
+author: "nragonese"
+date: "December 21, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load Packages and Data Set
+``` {r, echo = FALSE, warning = FALSE}
+library(tidyverse)
+library(datasets)
+library(knitr)
+
+```
+
+
+# Exploratory Analysis
+
+Below is the code for all EDA done. I will print graphs as I reference them in my findings section.
+``` {r,eval = FALSE}
+glimpse(ToothGrowth)
+
+ToothGrowth %>%
+  group_by(supp,dose) %>%
+  summarise(average = mean(len))
+
+ggplot(ToothGrowth)+
+    geom_boxplot(mapping = aes(x = supp, y = len))
+
+ggplot(ToothGrowth)+
+    geom_boxplot(mapping = aes(x = as.factor(dose), y = len))
+
+ggplot(ToothGrowth)+
+    geom_point(mapping = aes(x = dose, y = len))
+
+ggplot(ToothGrowth)+
+    geom_boxplot(mapping = aes(x = supp, y = len))+
+    facet_grid(. ~ dose)
+
+ggplot(ToothGrowth)+
+    geom_boxplot(mapping = aes(x = as.factor(dose), y = len))+
+    facet_grid(. ~ supp)
+
+ggplot(ToothGrowth)+
+    geom_point(mapping = aes(x = dose, y = len))+
+    facet_grid(. ~ supp)
+
+ToothGrowthVariance <- ToothGrowth %>%
+  group_by(supp,dose) %>%
+  summarise(Variance = sd(len)^2)
+
+
+```
+
+# Exploratory Analysis Findings
+
+The data appears to show two Supplements(OJ and VC) and their effect on tooth growth(measured by len) at various doses. Based on an initial summary, OJ appears to be performing better at .5 and 1.0 dosage levels, while there is a minimal difference between OJ and VC at the 2.0 doses.
+
+``` {r }
+
+ToothGrowthSummary <- ToothGrowth %>%
+  group_by(supp,dose) %>%
+  summarise(average = mean(len))
+
+kable(ToothGrowthSummary, type = "html", caption = "Tooth Growth Summary")
+
+```
+
+Regardless of which supplement is used, the mean tooth growth appears to get larger as the dosages used increases. the mean length with increased doses of OJ seems to plateau as it approaches 2.0, where as the increased length for VC remains relatively steady as the dosage doubles.
+
+
+``` {r }
+ggplot(ToothGrowth)+
+    geom_boxplot(mapping = aes(x = as.factor(dose), y = len))+
+    facet_grid(. ~ supp)
+```    
+
+The variance between length appears to increase with increased doses of VC, where the variance of length seems to decrease with increased doses of OJ.
+
+``` {r }
+ggplot(ToothGrowth)+
+    geom_point(mapping = aes(x = dose, y = len))+
+    facet_grid(. ~ supp)
+```
+
+When calculating the actual variance, it does consistently decrease for OJ with increased doses, while for VC it decreases from 0.5 to 1.0, then increases significantly from 1.0 to 2.0.
+
+``` {r }
+ToothGrowthVariance <- ToothGrowth %>%
+  group_by(supp,dose) %>%
+  summarise(Variance = sd(len)^2)
+
+kable(ToothGrowthVariance, type = "html", caption = "Tooth Growth Variance")
+
+```
+
+# Testing
+
+Due to the varied levels of doses, I will test tooth growth on OJ vs VC in aggregate, OJ vs VC for each dose, and dosage levels against each other, regardless of the supplement. I will test to a 95% confidence level.
+
+### Aggregate
+
+The P Value of 0.06063 when comparing the OJ samples to the VC samples implies that there is a 6.06% chance of getting these results, assuming the null hypothesis that there is no significant difference between the growth in tooth populatons using the OJ supplement and the growth in tooth populations using the VC supplement.
+
+```{r}
+
+oj <- ToothGrowth %>% filter(supp=="OJ")
+vc <- ToothGrowth %>% filter(supp=="VC")
+t.test(oj$len,vc$len, paired = FALSE)
+
+```
+
+
+### 0.5 Dose
+
+The P Value of 0.006359 when comparing the OJ samples to the VC samples at a 0.5 dose implies that there is less than a 1% chance of getting these results, assuming the null hypothesis that there is no significant difference between the growth in tooth populatons using the OJ supplement at a 0.5 dose and the growth in tooth populations using the VC supplement at a 0.5 dose.
+```{r}
+
+oj0.5 <- ToothGrowth %>% filter(supp=="OJ", dose=="0.5")
+vc0.5 <- ToothGrowth %>% filter(supp=="VC", dose=="0.5")
+t.test(oj0.5$len,vc0.5$len, paired = FALSE)
+
+```
+
+### 1 Dose
+
+The P Value of 0.001038 when comparing the OJ samples to the VC samples at a 1 dose implies that there is also a less than a 1% chance of getting these results, assuming the null hypothesis that there is no significant difference between the growth in tooth populatons using the OJ supplement at a 1 dose and the growth in tooth populations using the VC supplement at a 1 dose.
+```{r}
+
+oj1 <- ToothGrowth %>% filter(supp=="OJ", dose=="1")
+vc1 <- ToothGrowth %>% filter(supp=="VC", dose=="1")
+t.test(oj1$len,vc1$len, paired = FALSE)
+
+```
+
+### 2 Dose
+
+The P Value of .9639 when comparing the OJ samples to the VC samples at a 2 dose implies that there is a 96.39% chance of getting these results, assuming the null hypothesis that there is no significant difference between the growth in tooth populatons using the OJ supplement at a 2 Dose and the growth in tooth populations using the VC supplement at a 2 Dose.
+
+```{r}
+
+oj2 <- ToothGrowth %>% filter(supp=="OJ", dose=="2")
+vc2 <- ToothGrowth %>% filter(supp=="VC", dose=="2")
+t.test(oj2$len,vc2$len)
+
+```
+
+### 0.5 Dose vs 1.0 Dose
+
+The P Value of 1.268e-07 when comparing the 0.5 dose samples to the 1.0 dose sample implies that there is a less than a 1% chance of getting these results, assuming the null hypothesis that there is no significant difference between the growth in tooth populatons using the 0.5 Dose supplements and the growth in tooth populations using the 1.0 Dose supplements.
+
+```{r}
+
+dose0.5 <- ToothGrowth %>% filter(dose=="0.5")
+dose1 <- ToothGrowth %>% filter(dose=="1")
+dose2 <- ToothGrowth %>% filter(dose=="2")
+
+t.test(dose0.5$len,dose1$len, paired = FALSE)
+
+```
+
+### 1.0 Dose vs 2.0 Dose
+
+The P Value of 1.906e-05 when comparing the 1 dose samples to the 2 dose sample implies that there is a less than a 1% chance of getting these results, assuming the null hypothesis that there is no significant difference between the growth in tooth populatons using the 1 dose supplements and the growth in tooth populations using the 2 dose supplements.
+
+```{r}
+
+t.test(dose1$len,dose2$len, paired = FALSE)
+
+```
+
+### .5 Dose vs 2.0 Dose
+
+The P Value of 4.398e-14 when comparing the 0.5 dose samples to the 2 dose sample implies that there is a less than a 1% chance of getting these results, assuming the null hypothesis that there is no significant difference between the growth in tooth populatons using the 0.5 dose supplements and the growth in tooth populations using the 2 dose supplements.
+
+```{r}
+
+t.test(dose0.5$len,dose2$len, paired = FALSE)
+
+```
+
+# Conclusions
+
+For my conclusions, I am assuming the null hypothesis that there is no significant difference between the growth in tooth populatons, when comparing 2 populations. Testing at a 95% confidence interval I accept the null hypothesis for OJ vs VC in aggregate, and OJ vs VC at the 2.0 dose. I reject the null hypothesis for OJ vs VC at the 0.5 dose, OJ vs VC at the 1.0 dose, supplement doses at 0.5 vs supplement doses at 1.0, supplement doses at 0.5 vs supplement doses at 2.0, and supplement doses at 1.0 vs supplement doses at 2.0.
+
+By rejecting these null hypothesis, I beleive that the OJ supplement leads to more tooth growth at the 0.5 doses and the 1.0 doses than the VC supplement at those doses. Additionally, when looking at doses of 0.5,1.0, and 2.0 for either supplement, higher doses lead to more tooth growth. 
+

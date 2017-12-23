@@ -1,0 +1,123 @@
+---
+title: "Statistical Inference Final Project Part 1"
+author: "nragonese"
+date: "December 22, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+set.seed(1234)
+```
+
+# Overview
+In this project I will test the Central Limit Therem, that the distribution of averages of iid variables becomes that of a standard normal as the sample size increases. I will do so by taking the average of 40 random variables from the exponential distribution. I will then run 1000 simulations of averaging these 40 variables. Finally, I will test that increasing the sample size will bring the distribution of means closer to a standard normal distribution.
+
+
+## Simulations
+
+The simulation involves taking the mean of 40 random values from the exponential distribution. This simulation was then run 1000 times, and each of those 1000 means was plotted on the below graph(Means of 1000 Simulations). 
+
+```{r , echo=FALSE}
+set.seed(1234)
+
+n <- 40
+nosim <- 1000
+lambda <- .2
+
+mns = NULL       
+
+for (i in 1 : 1000) mns = c(mns,mean(rexp(n, lambda)))
+
+df <- data.frame("mean" = mns)
+
+hist(df$mean, main ="Means of 1000 Simulations", xlab = "Mean", breaks = 50)
+
+```
+
+## Sample Mean vs Theoretical Mean
+
+```{r, echo = TRUE}
+
+samplemean <- mean(mns)
+theoreticalmean <- 1/lambda
+
+
+```
+
+
+```{r, echo = TRUE}
+
+hist(df$mean,breaks = 50,prob = TRUE, main = "Sample Means vs Theoretical Curve",xlab = "Mean")
+
+abline(v =samplemean,lty= 1, col = 4)
+abline(v = theoreticalmean, lty= 2, col = 2)
+
+legend('topright', c("Simulation Mean","Theoretical Mean"),lty = c(1,2),col = c(4,2))
+
+```
+
+The sample mean for the simulations was `r round(samplemean,3)`, compared to the theoretical mean of `r theoreticalmean`.
+
+## Sample Variance vs Theoretical Variance
+
+```{r, echo=TRUE}
+
+samplevariance <- var(mns)
+theoreticalvariance <- ((1/lambda)^2)/40
+
+```
+
+
+The sample variance for the simulations was `r round(samplevariance,3)`, compared to the theoretical variance of `r theoreticalvariance`.
+
+##Distribution
+
+```{r, echo = TRUE}
+
+hist(df$mean,breaks = 50,prob = TRUE, main = "Sample Means vs Theoretical Curve",xlab = "Mean")
+xnorm <- seq(min(df$mean), max(df$mean), length = 1000)
+ynorm <- dnorm(xnorm, mean = theoreticalmean, sd = sqrt(theoreticalvariance))
+abline(v =samplemean,lty= 1, col = 4)
+abline(v = theoreticalmean, lty= 2, col = 2)
+lines(xnorm,ynorm,lty= 2, col = 2)
+lines(density(df$mean), col = 4)
+legend('topright', c("Sample Curve/Mean","Theoretical Curve/Mean"),lty = c(1,2),col = c(4,2))
+ 
+```
+
+The above graph highlights the sample distribution vs the theoretical normal distrubtion. While they are close, they would get even closer as we increase the number of random samples in each of our 1000 simulations. See below an example with 100,000 variables in 1000 simulations.
+
+```{r , echo=FALSE}
+set.seed(1234)
+
+n <- 100000
+nosim <- 1000
+lambda <- .2
+
+mns = NULL       
+for (i in 1 : 1000) mns = c(mns,mean(rexp(n, lambda)))
+df <- data.frame("mean" = mns)
+
+
+
+samplemean <- mean(mns)
+theoreticalmean <- 1/lambda
+samplevariance <- var(mns)
+theoreticalvariance <- ((1/lambda)^2)/100000
+
+
+hist(df$mean,breaks = 50,prob = TRUE, main = "Sample Means vs Theoretical Curve",xlab = "Mean")
+xnorm <- seq(min(df$mean), max(df$mean), length = 1000)
+ynorm <- dnorm(xnorm, mean = theoreticalmean, sd = sqrt(theoreticalvariance))
+abline(v =samplemean,lty= 1, col = 4)
+abline(v = theoreticalmean, lty= 2, col = 2)
+lines(xnorm,ynorm,lty= 2, col = 2)
+lines(density(df$mean), col = 4)
+legend('topright', c("Sample Curve/Mean","Theoretical Curve/Mean"),lty = c(1,2),col = c(4,2))
+ 
+
+```
+
+Our sample mean with 100,000 variables is 5.00042 much closer to the theoretical mean of 5 than our original sample mean of 4.974 with 40 variables.
